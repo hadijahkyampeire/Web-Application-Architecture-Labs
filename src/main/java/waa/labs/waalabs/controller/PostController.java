@@ -18,12 +18,9 @@ import java.util.List;
 @RequestMapping("/api/v1/posts")
 @CrossOrigin(origins = "*", allowedHeaders = "*")
 public class PostController {
-    private final PostService postService;
-
     @Autowired
-    public PostController(PostService postService, ModelMapper modelMapper) {
-        this.postService = postService;
-    }
+    PostService postService;
+
 
     @ResponseStatus(HttpStatus.OK)
     @GetMapping
@@ -32,26 +29,26 @@ public class PostController {
     }
 
     @GetMapping("/{id}")
-    public ResponseDto<PostDto> getPostById(@PathVariable int id) {
+    public PostDto getPostById(@PathVariable long id) {
         return postService.getPostById(id);
     }
 
     @ResponseStatus(HttpStatus.CREATED)
     @PostMapping
-    public ResponseEntity<ResponseDto<Post>> savePost(@RequestBody Post post) {
-        ResponseDto<Post> res = postService.createPost(post);
+    public ResponseEntity<ResponseDto<PostDto>> savePost(@RequestBody PostDto post) {
+        ResponseDto<PostDto> res = postService.createPost(post);
         return ResponseEntity.status(res.getStatusCode()).body(res);
     }
 
     @ResponseStatus(HttpStatus.OK)
     @PutMapping("/{id}")
-    public void updatePost(@PathVariable Long id, @RequestBody PostDto post) {
+    public void updatePost(@PathVariable long id, @RequestBody PostDto post) {
         postService.updatePost(id, post);
     }
 
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @DeleteMapping("/{id}")
-    public void deletePost(@PathVariable Long id) {
+    public void deletePost(@PathVariable long id) {
         postService.deletePost(id);
     }
 

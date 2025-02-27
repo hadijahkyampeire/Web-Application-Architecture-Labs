@@ -7,6 +7,7 @@ public class PostDto {
     String title;
     String content;
     String author;
+    long userId;
 
     public PostDto() {
 
