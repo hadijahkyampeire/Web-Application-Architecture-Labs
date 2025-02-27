@@ -1,9 +1,14 @@
 package waa.labs.waalabs.domain;
 
+import jakarta.persistence.*;
 import lombok.Data;
+import lombok.Setter;
 
-@Data
+@Entity
 public class Post {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+
     long id;
     String title;
     String content;

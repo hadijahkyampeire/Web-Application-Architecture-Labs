@@ -14,9 +14,10 @@ import waa.labs.waalabs.repo.PostRepo;
 import waa.labs.waalabs.service.PostService;
 
 import java.util.List;
+import java.util.Locale;
+import java.util.stream.Collectors;
 
 @Service
-@RequiredArgsConstructor
 public class PostServiceImpl implements PostService {
 
     private final PostRepo postRepo;
@@ -27,42 +28,83 @@ public class PostServiceImpl implements PostService {
     @Autowired
     ListMapper listMapper;
 
-    @Override
-    public List<PostDto> findAllPosts() {
-        return listMapper.mapList(postRepo.findAll(), new PostDto());
+    @Autowired
+    public PostServiceImpl(PostRepo postRepo) {
+        this.postRepo = postRepo;
     }
 
     @Override
-    public ResponseDto<PostDto> getPostById(long id) {
-        List<Post> allPosts = postRepo.findAll();
-        boolean postFound = allPosts.stream().anyMatch(post -> post.getId() == id);
+   public List<PostDto> findAllPosts() {
+       return listMapper.mapList(postRepo.findAll(), new PostDto());
+   }
 
-        if (!postFound) {
-            return new ResponseDto<PostDto>("Post not found", 404);
-        }
-        PostDto postDto = modelMapper.map(postRepo.findById(id), PostDto.class);
-
-        return new ResponseDto<PostDto>("Post retrieved successfully", 200, postDto);
-    }
 
     @Override
-    public ResponseDto<Post> createPost(Post post) {
-        postRepo.save(post);
-        return new ResponseDto<Post>("Post created successfully", 201, post);
+   public PostDto getPostById(long id) {
+       Post p = postRepo.findById(id).orElse(null);
+       return modelMapper.map(p, PostDto.class);
+   }
+   @Override
+    public ResponseDto<PostDto> createPost(PostDto post) {
+        postRepo.save(modelMapper.map(post, Post.class));
+        return new ResponseDto<PostDto>("Post created successfully", 201, post);
     }
+
 
     @Override
     public void updatePost(long id, PostDto post) {
-        postRepo.update(id, modelMapper.map(post, Post.class));
+       Post postToUpdate = postRepo.findById(id).orElseThrow(() -> new RuntimeException("Post not found"));
+       postToUpdate.setId(id);
+       postRepo.save(postToUpdate);
     }
 
     @Override
     public void deletePost(long id) {
-        postRepo.delete(id);
+       postRepo.deleteById(id);
     }
 
+
+    // For non persistent
+//    @Override
+//    public List<PostDto> findAllPosts() {
+//        return listMapper.mapList(postRepo.findAll(), new PostDto());
+//    }
+//
+//    @Override
+//    public ResponseDto<PostDto> getPostById(long id) {
+//        List<Post> allPosts = postRepo.findAll();
+//        boolean postFound = allPosts.stream().anyMatch(post -> post.getId() == id);
+//
+//        if (!postFound) {
+//            return new ResponseDto<PostDto>("Post not found", 404);
+//        }
+//        PostDto postDto = modelMapper.map(postRepo.findById(id), PostDto.class);
+//
+//        return new ResponseDto<PostDto>("Post retrieved successfully", 200, postDto);
+//    }
+//
+//    @Override
+//    public ResponseDto<Post> createPost(Post post) {
+//        postRepo.save(post);
+//        return new ResponseDto<Post>("Post created successfully", 201, post);
+//    }
+//
+//    @Override
+//    public void updatePost(long id, PostDto post) {
+//        postRepo.update(id, modelMapper.map(post, Post.class));
+//    }
+//
+//    @Override
+//    public void deletePost(long id) {
+//        postRepo.delete(id);
+//    }
+//
     @Override
     public List<PostDto> filterPostByAuthor(String author) {
-        return listMapper.mapList(postRepo.filterByAuthor(author), new PostDto());
+        List<Post> filteredPosts = postRepo.findAll().stream()
+                .filter(post -> post.getAuthor().toLowerCase().contains(author.toLowerCase()))
+                .collect(Collectors.toList());
+
+        return listMapper.mapList(filteredPosts, new PostDto());
     }
 }
