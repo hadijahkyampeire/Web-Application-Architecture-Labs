@@ -2,6 +2,7 @@ package waa.labs.waalabs.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
+import waa.labs.waalabs.aspect.annotation.ExecutionTime;
 import waa.labs.waalabs.domain.Post;
 import waa.labs.waalabs.domain.User;
 import waa.labs.waalabs.dto.CommentDto;
@@ -24,6 +25,7 @@ public class UserController {
         return postTitle != null ? userService.getUserPostsByTitle(postTitle) : userService.findAllUsers();
     }
 
+    @ExecutionTime
     @GetMapping("/{id}")
     public ResponseDto<UserDto> getUserById(@PathVariable long id) {
         return userService.findById(id);
