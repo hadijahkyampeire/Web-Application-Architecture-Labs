@@ -1,11 +1,13 @@
 package waa.labs.waalabs.service.impl;
 
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import waa.labs.waalabs.domain.Comment;
 import waa.labs.waalabs.domain.Post;
 import waa.labs.waalabs.dto.PostDto;
 import waa.labs.waalabs.dto.ResponseDto;
@@ -40,9 +42,12 @@ public class PostServiceImpl implements PostService {
 
 
     @Override
-   public PostDto getPostById(long id) {
+   public ResponseDto<PostDto> getPostById(long id) {
        Post p = postRepo.findById(id).orElse(null);
-       return modelMapper.map(p, PostDto.class);
+       if (p == null) {
+           return new ResponseDto<>("Post not found", HttpStatus.NOT_FOUND.value());
+       }
+       return new ResponseDto<>("Success", HttpStatus.OK.value(), modelMapper.map(p, PostDto.class));
    }
    @Override
     public ResponseDto<PostDto> createPost(PostDto post) {
@@ -55,6 +60,9 @@ public class PostServiceImpl implements PostService {
     public void updatePost(long id, PostDto post) {
        Post postToUpdate = postRepo.findById(id).orElseThrow(() -> new RuntimeException("Post not found"));
        postToUpdate.setId(id);
+       postToUpdate.setTitle(post.getTitle());
+       postToUpdate.setContent(post.getContent());
+       postToUpdate.setAuthor(post.getAuthor());
        postRepo.save(postToUpdate);
     }
 
@@ -63,6 +71,20 @@ public class PostServiceImpl implements PostService {
        postRepo.deleteById(id);
     }
 
+
+    @Override
+    @Transactional
+    public void addCommentToPost(long postId, Comment comment) {
+        Post post = postRepo.findById(postId).orElseThrow(() -> new RuntimeException("User not found with id: " + postId));
+        post.addComment(comment);
+//        postRepo.save(post);
+    }
+
+    @Override
+    public List<Comment> getCommentsByPost(long postId) {
+        Post post = postRepo.findById(postId).orElse(null);
+        return post.getComments();
+    }
 
     // For non persistent
 //    @Override
@@ -99,6 +121,8 @@ public class PostServiceImpl implements PostService {
 //        postRepo.delete(id);
 //    }
 //
+
+    // FILTERS
     @Override
     public List<PostDto> filterPostByAuthor(String author) {
         List<Post> filteredPosts = postRepo.findAll().stream()
@@ -106,5 +130,15 @@ public class PostServiceImpl implements PostService {
                 .collect(Collectors.toList());
 
         return listMapper.mapList(filteredPosts, new PostDto());
+    }
+
+    @Override
+    public List<PostDto> getPostsByTitle(String title) {
+        return listMapper.mapList(postRepo.findPostsByTitle(title), new PostDto());
+    }
+
+    @Override
+    public List<PostDto> getPostsByAuthorAndTitle(String author, String Title) {
+        return listMapper.mapList(postRepo.findByAuthorAndTitle(author, Title), new PostDto());
     }
 }
