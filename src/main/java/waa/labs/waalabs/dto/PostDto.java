@@ -1,5 +1,8 @@
 package waa.labs.waalabs.dto;
 import lombok.Data;
+import waa.labs.waalabs.domain.Comment;
+
+import java.util.List;
 
 @Data
 public class PostDto {
@@ -7,7 +10,8 @@ public class PostDto {
     String title;
     String content;
     String author;
-    long userId;
+
+    List<Comment> comments;
 
     public PostDto() {
 

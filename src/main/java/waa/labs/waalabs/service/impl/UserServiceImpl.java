@@ -3,10 +3,14 @@ package waa.labs.waalabs.service.impl;
 import jakarta.transaction.Transactional;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import waa.labs.waalabs.domain.Comment;
 import waa.labs.waalabs.domain.Post;
 import waa.labs.waalabs.domain.User;
+import waa.labs.waalabs.dto.CommentDto;
 import waa.labs.waalabs.dto.PostDto;
+import waa.labs.waalabs.dto.ResponseDto;
 import waa.labs.waalabs.dto.UserDto;
 import waa.labs.waalabs.helper.ListMapper;
 import waa.labs.waalabs.repo.UserRepo;
@@ -32,9 +36,12 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public UserDto findById(long id) {
+    public ResponseDto<UserDto> findById(long id) {
         User user = userRepo.findById(id).orElse(null);
-        return modelMapper.map(user, UserDto.class);
+        if (user == null) {
+            return new ResponseDto<>("User not found with id:" + id, HttpStatus.NOT_FOUND.value());
+        }
+        return new ResponseDto<>("User found", HttpStatus.OK.value(), modelMapper.map(user, UserDto.class));
     }
 
     @Override
@@ -43,12 +50,23 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    public void deleteById(long id) {
+        userRepo.deleteById(id);
+    }
+
+    @Override
     public List<PostDto> findUserPosts(long id) {
         User user = userRepo.findById(id).orElse(null);
         return listMapper.mapList(user.getPosts(), new PostDto());
     }
 
-    @Transactional
+    @Override
+    public PostDto findUserPostById(long userId, long postId) {
+        Post p = userRepo.findUserPostById(userId, postId);
+        return modelMapper.map(p, PostDto.class);
+    }
+
+    //    @Transactional
     @Override
     public void addPostToUser(long userId, PostDto post) {
         // Step 1: Fetch the user
@@ -67,4 +85,26 @@ public class UserServiceImpl implements UserService {
     public List<User> getUsersWithMoreThanOnePost() {
         return userRepo.findUsersWithMoreThanOnePost();
     };
+
+    @Override
+    public List<User> getUsersWithMoreThanNPosts(int n) {
+        return userRepo.findUsersWithMoreThanNPost(n);
+    }
+
+    @Override
+    public List<UserDto> getUserPostsByTitle(String title) {
+        return listMapper.mapList(userRepo.findUserPostsByTitle(title), new UserDto());
+    }
+
+    @Override
+    public CommentDto getUserPostCommentById(long userId, long postId, long commentId) {
+        // Business Logic substituted with Query
+//        User u = userRepo.findById(userId).orElse(null);
+//        assert u != null;
+//        Post p = u.getPosts().stream().filter(post -> post.getId() == postId).findFirst().orElse(null);
+//        assert p != null;
+//        Comment c = p.getComments().stream().filter(comment -> comment.getId() == commentId).findFirst().get();
+        Comment c = userRepo.findUserPostCommentById(userId, postId, commentId);
+        return modelMapper.map(c, CommentDto.class);
+    }
 }

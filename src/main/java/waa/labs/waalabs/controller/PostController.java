@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import waa.labs.waalabs.domain.Comment;
 import waa.labs.waalabs.domain.Post;
 import waa.labs.waalabs.dto.PostDto;
 import waa.labs.waalabs.dto.ResponseDto;
@@ -20,16 +21,33 @@ import java.util.List;
 public class PostController {
     @Autowired
     PostService postService;
+    @Autowired
+    private ModelMapper modelMapper;
 
 
     @ResponseStatus(HttpStatus.OK)
     @GetMapping
-    public List<PostDto> getAllByAuthor(@RequestParam(value="author", required = false) String author) {
-        return author == null ? postService.findAllPosts() : postService.filterPostByAuthor(author);
+    public List<PostDto> getAllByAuthorAndOrTitle(
+            @RequestParam(value="author", required = false) String author,
+            @RequestParam(value="title", required = false) String title) {
+        if (author != null && title != null) {
+            // Fetch posts by both author and title
+            return postService.getPostsByAuthorAndTitle(author, title);
+        } else if (author != null) {
+            // Fetch posts by author
+            return postService.filterPostByAuthor(author);
+        } else if (title != null) {
+            // Fetch posts by title
+            return postService.getPostsByTitle(title);
+        } else {
+            // Fetch All
+            return postService.findAllPosts();
+        }
     }
 
+
     @GetMapping("/{id}")
-    public PostDto getPostById(@PathVariable long id) {
+    public ResponseDto<PostDto> getPostById(@PathVariable long id) {
         return postService.getPostById(id);
     }
 
@@ -52,5 +70,16 @@ public class PostController {
         postService.deletePost(id);
     }
 
+    // COMMENTS
+    // Add comments to a post
+    @PostMapping("/{id}/comments")
+    @ResponseStatus(HttpStatus.CREATED)
+    public void addComment(@PathVariable long id, @RequestBody Comment comment) {
+        postService.addCommentToPost(id, comment);
+    }
 
+    @GetMapping("/{id}/comments")
+    public List<Comment> getComments(@PathVariable long id) {
+        return postService.getCommentsByPost(id);
+    }
 }

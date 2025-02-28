@@ -4,6 +4,8 @@ import jakarta.persistence.*;
 import lombok.Data;
 import lombok.Setter;
 
+import java.util.List;
+
 @Entity
 public class Post {
     @Id
@@ -13,6 +15,18 @@ public class Post {
     String title;
     String content;
     String author;
+
+    @OneToMany(cascade = CascadeType.ALL)
+    @JoinColumn(name="post_id")
+    List<Comment> comments;
+
+    public List<Comment> getComments() {
+        return comments;
+    }
+
+    public void addComment(Comment comment) {
+        comments.add(comment);
+    }
 
     public Post() {
     }
