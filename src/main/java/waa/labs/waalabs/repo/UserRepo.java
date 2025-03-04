@@ -30,4 +30,7 @@ public interface UserRepo extends JpaRepository<User, Long> {
 
     @Query("SELECT p FROM User u JOIN u.posts p WHERE u.id = :userId and p.id = :postId")
     Post findUserPostById(long userId, long postId);
+
+    @Query("SELECT u FROM User u WHERE LOWER(u.email) =:email")
+    User findUserByEmail(@Param("email") String email);
 }

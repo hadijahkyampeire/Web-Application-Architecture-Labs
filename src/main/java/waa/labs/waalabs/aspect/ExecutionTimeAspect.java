@@ -11,6 +11,7 @@ import waa.labs.waalabs.aspect.annotation.ExecutionTime;
 @Component
 public class ExecutionTimeAspect {
     ExecutionTime executionTime;
+
     @Pointcut("@annotation(waa.labs.waalabs.aspect.annotation.ExecutionTime)")
     public void executionTimePointcut() {
 

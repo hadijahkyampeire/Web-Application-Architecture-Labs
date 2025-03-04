@@ -20,6 +20,22 @@ public class Post {
     @JoinColumn(name="post_id")
     List<Comment> comments;
 
+    @ManyToOne
+    @JoinColumn(name = "user_id", nullable = false)
+    private User user;
+
+    public void setComments(List<Comment> comments) {
+        this.comments = comments;
+    }
+
+    public User getUser() {
+        return user;
+    }
+
+    public void setUser(User user) {
+        this.user = user;
+    }
+
     public List<Comment> getComments() {
         return comments;
     }
