@@ -62,12 +62,7 @@ public class JwtUtil {
 
     public String generateToken(UserDetails userDetails) {
         Map<String, Object> claims = new HashMap<>();
-        List<String> roles = userDetails.getAuthorities().stream()
-                .map(GrantedAuthority::getAuthority)
-                .collect(Collectors.toList());
-
-        claims.put("type", "access");
-        claims.put("roles", roles);
+        claims.put("type", "access"); // Add a "type" claim
         return doGenerateToken(claims, userDetails.getUsername());
     }
 
@@ -91,13 +86,10 @@ public class JwtUtil {
                 .compact();
     }
 
-    public String generateRefreshToken(String email) {
-        return Jwts.builder()
-                .setSubject(email)
-                .setIssuedAt(new Date())
-                .setExpiration(new Date(System.currentTimeMillis() + refreshExpiration))
-                .signWith(SignatureAlgorithm.HS512, secret)
-                .compact();
+    public String generateRefreshToken(String subject) {
+        Map<String, Object> claims = new HashMap<>();
+        claims.put("type", "refresh"); // Add a "type" claim
+        return doGenerateToken(claims, subject);
     }
 
     public String getSubjectFromToken(String token) {
@@ -132,20 +124,30 @@ public class JwtUtil {
         }
     }
 
+//    public Authentication getAuthentication(String token) {
+//        if(!isAccessToken(token)){
+//            return null;
+//        }
+//        Claims claims = getAllClaimsFromToken(token);
+//        List<String> roles = claims.get("roles", List.class);
+//        System.out.println("Decoded Roles from JWT: " + roles);
+//
+//        List<GrantedAuthority> authorities = roles.stream()
+//                .map(SimpleGrantedAuthority::new)
+//                .collect(Collectors.toList());
+//
+//        UserDetails userDetails = new org.springframework.security.core.userdetails.User(claims.getSubject(), "", authorities)  ;
+//        return new UsernamePasswordAuthenticationToken(userDetails, token, userDetails.getAuthorities());
+//    }
+
     public Authentication getAuthentication(String token) {
-        if(!isAccessToken(token)){
-            return null;
+        if (!isAccessToken(token)) {
+            return null; // or throw an exception indicating invalid token type
         }
         Claims claims = getAllClaimsFromToken(token);
-        List<String> roles = claims.get("roles", List.class);
-        System.out.println("Decoded Roles from JWT: " + roles);
-
-        List<GrantedAuthority> authorities = roles.stream()
-                .map(SimpleGrantedAuthority::new)
-                .collect(Collectors.toList());
-
-        UserDetails userDetails = new org.springframework.security.core.userdetails.User(claims.getSubject(), "", authorities)  ;
-        return new UsernamePasswordAuthenticationToken(userDetails, token, userDetails.getAuthorities());
+        UserDetails userDetails = userDetailsService.loadUserByUsername(claims.getSubject());
+        return new UsernamePasswordAuthenticationToken(
+                userDetails, null, userDetails.getAuthorities());
     }
 
     public String getUsernameFromToken(String token) {

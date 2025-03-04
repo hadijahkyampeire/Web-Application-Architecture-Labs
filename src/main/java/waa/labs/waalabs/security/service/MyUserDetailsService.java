@@ -8,7 +8,7 @@ import org.springframework.stereotype.Service;
 import waa.labs.waalabs.repo.UserRepo;
 import waa.labs.waalabs.security.MyUserDetails;
 
-@Service
+@Service( "userDetailsService")
 @Transactional
 public class MyUserDetailsService implements UserDetailsService {
     private final UserRepo userRepo;
