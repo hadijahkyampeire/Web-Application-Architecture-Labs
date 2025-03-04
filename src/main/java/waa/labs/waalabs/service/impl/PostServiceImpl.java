@@ -6,6 +6,7 @@ import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import waa.labs.waalabs.domain.Comment;
 import waa.labs.waalabs.domain.Post;
@@ -13,7 +14,9 @@ import waa.labs.waalabs.dto.PostDto;
 import waa.labs.waalabs.dto.ResponseDto;
 import waa.labs.waalabs.helper.ListMapper;
 import waa.labs.waalabs.repo.PostRepo;
+import waa.labs.waalabs.repo.UserRepo;
 import waa.labs.waalabs.service.PostService;
+import waa.labs.waalabs.domain.User;
 
 import java.util.List;
 import java.util.Locale;
@@ -29,6 +32,9 @@ public class PostServiceImpl implements PostService {
 
     @Autowired
     ListMapper listMapper;
+
+    @Autowired
+    private UserRepo userRepo;
 
     @Autowired
     public PostServiceImpl(PostRepo postRepo) {
@@ -50,9 +56,13 @@ public class PostServiceImpl implements PostService {
        return new ResponseDto<>("Success", HttpStatus.OK.value(), modelMapper.map(p, PostDto.class));
    }
    @Override
-    public ResponseDto<PostDto> createPost(PostDto post) {
-        postRepo.save(modelMapper.map(post, Post.class));
-        return new ResponseDto<PostDto>("Post created successfully", 201, post);
+    public ResponseDto<PostDto> createPost(PostDto postDto) {
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        User user = userRepo.findUserByEmail(email);
+        Post post = modelMapper.map(postDto, Post.class);
+        post.setUser(user);
+        postRepo.save(post);
+        return new ResponseDto<PostDto>("Post created successfully", 201, postDto);
     }
 
 

@@ -19,10 +19,15 @@ import java.util.List;
 @RequestMapping("/api/v1/posts")
 @CrossOrigin(origins = "*", allowedHeaders = "*")
 public class PostController {
-    @Autowired
-    PostService postService;
+    private final PostService postService;
+
     @Autowired
     private ModelMapper modelMapper;
+
+    @Autowired // OR can be ignored
+    public PostController(PostService postService) {
+        this.postService = postService;
+    }
 
 
     @ResponseStatus(HttpStatus.OK)
